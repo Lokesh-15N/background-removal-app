@@ -1,0 +1,11 @@
+# Ignore environment files containing secrets
+.env
+.env.*
+# Ignore local node modules
+node_modules/
+# Ignore build output
+.next/
+out/
+# Ignore OS files
+.DS_Store
+Thumbs.db
