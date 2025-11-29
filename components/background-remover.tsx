@@ -1,3 +1,4 @@
+// React component for background removal UI and logic
 "use client"
 
 import type React from "react"
