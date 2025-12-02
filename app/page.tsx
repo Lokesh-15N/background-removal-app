@@ -1,7 +1,13 @@
+"use client"
+
 import { BackgroundRemover } from "@/components/background-remover"
+import { BackgroundChanger } from "@/components/background-changer"
 import { Scene3D } from "@/components/scene-3d"
 
+import { useState } from "react"
+
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<"remove" | "change">("remove")
   return (
     <main className="relative min-h-screen overflow-hidden">
       <Scene3D />
@@ -36,7 +42,32 @@ export default function Home() {
             </p>
           </div>
 
-          <BackgroundRemover />
+          {/* Tab Navigation */}
+          <div className="flex gap-4 mb-8 justify-center">
+            <button
+              onClick={() => setActiveTab("remove")}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                activeTab === "remove"
+                  ? "bg-gradient-to-r from-[#A3C9A8] via-[#C7E8C5] to-[#A3C9A8] text-[#23422a] shadow-lg"
+                  : "border-2 border-[#A3C9A8]/30 text-[#A3C9A8] hover:border-[#A3C9A8]/60"
+              }`}
+            >
+              Remove Background
+            </button>
+            <button
+              onClick={() => setActiveTab("change")}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                activeTab === "change"
+                  ? "bg-gradient-to-r from-[#A3C9A8] via-[#C7E8C5] to-[#A3C9A8] text-[#23422a] shadow-lg"
+                  : "border-2 border-[#A3C9A8]/30 text-[#A3C9A8] hover:border-[#A3C9A8]/60"
+              }`}
+            >
+              Change Background
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === "remove" ? <BackgroundRemover /> : <BackgroundChanger />}
         </div>
 
         {/* Footer removed as requested */}
