@@ -31,14 +31,14 @@ export default function Home() {
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 md:py-12">
           <div className="text-center mb-8 md:mb-12">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-4 text-balance">
-              Snap. Zap. Done.
+              Remove. Change. Create.
               <br />
               <span className="bg-gradient-to-r from-[#A3C9A8] via-[#C7E8C5] to-[#A3C9A8] bg-[length:200%_auto] bg-clip-text text-transparent animate-[gradient-shift_3s_ease_infinite]">
-                No bg? No prob.
+                Background magic in seconds.
               </span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Upload. Chill. Get magic.
+              Remove backgrounds or swap them with AI-generated scenes. Upload. Describe. Done.
             </p>
           </div>
 
