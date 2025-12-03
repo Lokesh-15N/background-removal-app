@@ -18,6 +18,48 @@ export function BackgroundRemover() {
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          let width = img.width
+          let height = img.height
+          
+          const maxSize = 1024
+          if (width > height) {
+            if (width > maxSize) {
+              height = Math.round((height * maxSize) / width)
+              width = maxSize
+            }
+          } else {
+            if (height > maxSize) {
+              width = Math.round((width * maxSize) / height)
+              height = maxSize
+            }
+          }
+          
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext("2d")
+          if (!ctx) {
+            reject(new Error("Failed to compress image"))
+            return
+          }
+          
+          ctx.drawImage(img, 0, 0, width, height)
+          resolve(canvas.toDataURL("image/jpeg", 0.8))
+        }
+        img.onerror = () => reject(new Error("Failed to load image"))
+        img.src = e.target?.result as string
+      }
+      reader.onerror = () => reject(new Error("Failed to read file"))
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) {
       setError("Please upload an image file")
@@ -33,12 +75,15 @@ export function BackgroundRemover() {
     setProcessedImage(null)
     setProcessingState("uploading")
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setOriginalImage(e.target?.result as string)
-      setProcessingState("idle")
-    }
-    reader.readAsDataURL(file)
+    compressImage(file)
+      .then((compressedImage) => {
+        setOriginalImage(compressedImage)
+        setProcessingState("idle")
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to process image")
+        setProcessingState("idle")
+      })
   }, [])
 
   const handleDrop = useCallback(
@@ -75,8 +120,11 @@ export function BackgroundRemover() {
     setProcessingState("processing")
     setError(null)
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 60000)
+
     try {
-      const response = await fetch(originalImage)
+      const response = await fetch(originalImage, { signal: controller.signal })
       const blob = await response.blob()
 
       const formData = new FormData()
@@ -85,7 +133,10 @@ export function BackgroundRemover() {
       const result = await fetch("/api/remove-bg", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!result.ok) {
         let errorMessage = "Failed to remove background"
@@ -108,7 +159,17 @@ export function BackgroundRemover() {
       setProcessedImage(processedUrl)
       setProcessingState("complete")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      clearTimeout(timeoutId)
+      
+      if (err instanceof Error) {
+        if (err.name === "AbortError") {
+          setError("Request timed out. Please try again with a faster connection.")
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError("An error occurred")
+      }
       setProcessingState("error")
     }
   }

@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
     formData.append("image_file_b64", base64Image)
     formData.append("type", "person")
     formData.append("format", "png")
-    formData.append("quality", "premium")
-    formData.append("edge", "smooth")
+    formData.append("quality", "standard")
+    formData.append("edge", "natural")
 
     const removeBgResponse = await fetch("https://api.remove.bg/v1.0/removebg", {
       method: "POST",
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         "X-API-Key": apiKey,
       },
       body: formData,
+      signal: AbortSignal.timeout(30000),
     })
 
     let personImage: string
@@ -55,9 +56,11 @@ export async function POST(request: NextRequest) {
     // Step 2: Generate new background using Pollinations.ai
     const backgroundUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
       prompt
-    )}?width=768&height=768&nologo=true`
+    )}?width=512&height=512&nologo=true`
 
-    const backgroundResponse = await fetch(backgroundUrl)
+    const backgroundResponse = await fetch(backgroundUrl, {
+      signal: AbortSignal.timeout(30000),
+    })
     if (!backgroundResponse.ok) {
       throw new Error(`Failed to generate background: ${backgroundResponse.status}`)
     }

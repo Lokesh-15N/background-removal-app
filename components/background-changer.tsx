@@ -18,6 +18,48 @@ export function BackgroundChanger() {
   const [prompt, setPrompt] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          let width = img.width
+          let height = img.height
+          
+          const maxSize = 1024
+          if (width > height) {
+            if (width > maxSize) {
+              height = Math.round((height * maxSize) / width)
+              width = maxSize
+            }
+          } else {
+            if (height > maxSize) {
+              width = Math.round((width * maxSize) / height)
+              height = maxSize
+            }
+          }
+          
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext("2d")
+          if (!ctx) {
+            reject(new Error("Failed to compress image"))
+            return
+          }
+          
+          ctx.drawImage(img, 0, 0, width, height)
+          resolve(canvas.toDataURL("image/jpeg", 0.8))
+        }
+        img.onerror = () => reject(new Error("Failed to load image"))
+        img.src = e.target?.result as string
+      }
+      reader.onerror = () => reject(new Error("Failed to read file"))
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) {
       setError("Please upload an image file")
@@ -33,12 +75,15 @@ export function BackgroundChanger() {
     setProcessedImage(null)
     setProcessingState("uploading")
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setOriginalImage(e.target?.result as string)
-      setProcessingState("idle")
-    }
-    reader.readAsDataURL(file)
+    compressImage(file)
+      .then((compressedImage) => {
+        setOriginalImage(compressedImage)
+        setProcessingState("idle")
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to process image")
+        setProcessingState("idle")
+      })
   }, [])
 
   const handleDrop = (e: React.DragEvent) => {
@@ -65,10 +110,12 @@ export function BackgroundChanger() {
   const compositeImages = (personImage: string, backgroundImage: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       try {
-        // Create high-quality output canvas
+        // Create high-quality output canvas - responsive to device
+        const isMobile = window.innerWidth < 768
+        const canvasSize = isMobile ? 512 : 768
         const canvas = document.createElement("canvas")
-        canvas.width = 768
-        canvas.height = 768
+        canvas.width = canvasSize
+        canvas.height = canvasSize
         const ctx = canvas.getContext("2d", { alpha: true })
 
         if (!ctx) {
@@ -108,7 +155,7 @@ export function BackgroundChanger() {
           }
 
           // Draw cropped and centered background to fill canvas
-          ctx.drawImage(bgImg, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 768, 768)
+          ctx.drawImage(bgImg, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvasSize, canvasSize)
 
           // Load person image with transparency
           const personImg = new Image()
@@ -121,18 +168,18 @@ export function BackgroundChanger() {
 
             // Scale person to fill more of the canvas naturally
             // Person should take up 75-85% of canvas for better visual balance
-            let scaledWidth = 768 * 0.8
+            let scaledWidth = canvasSize * 0.8
             let scaledHeight = scaledWidth / aspectRatio
 
             // If height exceeds canvas, scale by height instead
-            if (scaledHeight > 768 * 0.95) {
-              scaledHeight = 768 * 0.95
+            if (scaledHeight > canvasSize * 0.95) {
+              scaledHeight = canvasSize * 0.95
               scaledWidth = scaledHeight * aspectRatio
             }
 
             // Position person in center with slight upper positioning for natural look
-            const x = (768 - scaledWidth) / 2
-            const y = (768 - scaledHeight) / 2 + 20 // Slightly above center
+            const x = (canvasSize - scaledWidth) / 2
+            const y = (canvasSize - scaledHeight) / 2 + 20 // Slightly above center
 
             // Apply Gaussian blur to edges for natural feathering
             ctx.save()
@@ -158,14 +205,14 @@ export function BackgroundChanger() {
 
             // Add subtle vignette for depth perception
             const vignetteGradient = ctx.createRadialGradient(
-              384, 384, 200,
-              384, 384, 600
+              canvasSize / 2, canvasSize / 2, 200,
+              canvasSize / 2, canvasSize / 2, 600
             )
             vignetteGradient.addColorStop(0, "rgba(0, 0, 0, 0)")
             vignetteGradient.addColorStop(1, "rgba(0, 0, 0, 0.08)")
             
             ctx.fillStyle = vignetteGradient
-            ctx.fillRect(0, 0, 768, 768)
+            ctx.fillRect(0, 0, canvasSize, canvasSize)
 
             // Return composite as high-quality data URL
             resolve(canvas.toDataURL("image/png", 0.98))
@@ -194,6 +241,10 @@ export function BackgroundChanger() {
 
     setProcessingState("processing")
     setError(null)
+    
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 60000)
+    
     try {
       const response = await fetch("/api/change-bg", {
         method: "POST",
@@ -202,7 +253,10 @@ export function BackgroundChanger() {
           image: originalImage,
           prompt: prompt,
         }),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         let errorMessage = "Failed to process background change"
@@ -232,7 +286,17 @@ export function BackgroundChanger() {
       
       setProcessingState("complete")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      clearTimeout(timeoutId)
+      
+      if (err instanceof Error) {
+        if (err.name === "AbortError") {
+          setError("Request timed out. Please try again with a faster connection.")
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError("An error occurred")
+      }
       setProcessingState("idle")
     }
   }
