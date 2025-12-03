@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "BG Remover | AI Background Removal",
-  description: "Remove backgrounds from images instantly with AI-powered technology",
+  title: "PixelSwap | AI Background Remover & Scene Generator",
+  description: "Remove backgrounds and swap them with AI-generated scenes. Upload, describe, done.",
   generator: "v0.app",
 }
 

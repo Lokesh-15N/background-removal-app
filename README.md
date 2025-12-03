@@ -28,8 +28,8 @@ A modern Next.js app for removing image backgrounds and swapping them with AI-ge
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME
+git clone https://github.com/Lokesh-15N/pixelswap.git
+cd pixelswap
 ```
 
 ### 2. Install dependencies
@@ -64,13 +64,13 @@ Visit [http://localhost:3000](http://localhost:3000) to view the app.
 
 ## How to Use
 
-### Remove Background
+### Remove Background (PixelSwap)
 1. Click "Remove Background" tab
 2. Upload or drag an image
 3. Image background is automatically removed
 4. Download the transparent PNG
 
-### Change Background
+### Change Background with AI (PixelSwap)
 1. Click "Change Background" tab
 2. Upload or drag an image with a person/subject
 3. Enter a prompt describing the new background (e.g., "Tropical beach with palm trees", "Modern office building")
@@ -102,4 +102,4 @@ MIT
 
 ---
 
-**Made by Lokesh❤️ using Next.js, React, Tailwind CSS, and Three.js**
+**PixelSwap - Created by Lokesh❤️ using Next.js, React, Tailwind CSS, and Three.js**
