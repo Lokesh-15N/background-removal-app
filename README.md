@@ -1,6 +1,6 @@
-# Background Remover & Changer App
+# PixelSwap - Background Remover & AI Scene Generator
 
-A modern Next.js app for removing image backgrounds and changing them to AI-generated scenes with a beautiful green theme, 3D effects, and privacy-first API key handling.
+A modern Next.js app for removing image backgrounds and swapping them with AI-generated scenes. Features a beautiful green theme, 3D effects, mobile optimization, and privacy-first API key handling.
 
 ## Features
 

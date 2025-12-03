@@ -17,7 +17,7 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <span className="block text-3xl font-medium text-[#C7E8C5] text-center relative" style={{ letterSpacing: '-0.02em' }}>
                 <span className="inline-block relative pb-2">
-                  BG Remover
+                  PixelSwap
                   <span className="absolute left-0 bottom-0 w-full h-1 bg-[#C7E8C5] rounded" />
                 </span>
               </span>
