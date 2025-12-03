@@ -88,8 +88,19 @@ export function BackgroundRemover() {
       })
 
       if (!result.ok) {
-        const errorData = await result.json()
-        throw new Error(errorData.error || "Failed to remove background")
+        let errorMessage = "Failed to remove background"
+        try {
+          const contentType = result.headers.get("content-type")
+          if (contentType?.includes("application/json")) {
+            const errorData = await result.json()
+            errorMessage = errorData.error || errorMessage
+          } else {
+            errorMessage = `Server error: ${result.statusText}`
+          }
+        } catch {
+          errorMessage = `Server error: ${result.statusText}`
+        }
+        throw new Error(errorMessage)
       }
 
       const processedBlob = await result.blob()

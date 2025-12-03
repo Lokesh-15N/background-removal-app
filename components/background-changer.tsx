@@ -205,11 +205,22 @@ export function BackgroundChanger() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to process background change")
+        let errorMessage = "Failed to process background change"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          errorMessage = `Server error: ${response.statusText}`
+        }
+        throw new Error(errorMessage)
       }
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch {
+        throw new Error("Invalid response from server")
+      }
       
       if (data.personWithTransparency && data.background) {
         const compositeImage = await compositeImages(
